@@ -1,0 +1,334 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='utf-8'>
+
+<title>sixpoint/html5-tankwar @ GitHub</title>
+
+<style type="text/css">
+body {
+    margin-top: 1.0em;
+    background-color: #1d552c;
+    font-family: Helvetica, Arial, FreeSans, san-serif;
+    color: #ffffff;
+}
+#container {
+    margin: 0 auto;
+    width: 700px;
+}
+h1 { font-size: 3.8em; color: #e2aad3; margin-bottom: 3px; }
+h1 .small { font-size: 0.4em; }
+h1 a { text-decoration: none }
+h2 { font-size: 1.5em; color: #e2aad3; }
+h3 { text-align: center; color: #e2aad3; }
+a { color: #e2aad3; }
+.description { font-size: 1.2em; margin-bottom: 30px; margin-top: 30px; font-style: italic;}
+.download { float: right; }
+pre { background: #000; color: #fff; padding: 15px;}
+hr { border: 0; width: 80%; border-bottom: 1px solid #aaa}
+.footer { text-align:center; padding-top:30px; font-style: italic; }
+</style>
+</head>
+<body>
+    <a href="https://github.com/sixpoint/html5-tankwar"><img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub" /></a>
+
+    <div id="container">
+
+        <div class="download">
+            <a href="https://github.com/sixpoint/html5-tankwar/zipball/master">
+                <img border="0" width="90" src="https://github.com/images/modules/download/zip.png"></a>
+            <a href="https://github.com/sixpoint/html5-tankwar/tarball/master">
+                <img border="0" width="90" src="https://github.com/images/modules/download/tar.png"></a>
+        </div>
+
+        <h1><a href="https://github.com/sixpoint/html5-tankwar">html5-tankwar</a>
+            <span class="small">by <a href="https://github.com/sixpoint">sixpoint</a></span></h1>
+
+        <div class="description">
+            It's a tank war by html5 and javascript.
+        </div>
+
+        <h2>Authors</h2>
+
+        <p>Lexo Charles (lexo.charles@gmail.com)
+        <br/></p>
+
+
+        <h2>Contact</h2>
+        <p>Lexo Charles (sixpoint.me@gmail.com)
+        <br/></p>
+
+
+        <h2>Download</h2>
+        <p>
+        You can download this project in either
+        <a href="https://github.com/sixpoint/html5-tankwar/zipball/master">zip</a> or
+        <a href="https://github.com/sixpoint/html5-tankwar/tarball/master">tar formats.
+            </p>
+            <p>You can also clone the project with <a href="http://git-scm.com">Git</a>
+            by running:
+            <pre>$ git clone git://github.com/sixpoint/html5-tankwar</pre>
+            </p>
+
+            <div class="footer">
+                get the source code on GitHub : <a href="https://github.com/sixpoint/html5-tankwar">sixpoint/html5-tankwar</a>
+            </div>
+
+            <canvas id="canvas" width="1000" height="680"></canvas>
+    <script src="https://github.com/sixpoint/html5-tankwar/blob/master/js/utils.js"></script>
+    <script>
+        window.onload = function() {
+            // the configurations
+            var config = {
+                forwardKey: 38, // go ahead
+                backwardKey: 40,
+                turnLeftKey: 37,
+                turnRightKey: 39
+            };
+
+            var canvas = document.getElementById('canvas'),
+                context = canvas.getContext('2d');
+            /*var heavyTank = new Image();
+            heavyTank.src = "images/heavy-ct.png";
+            heavyTank.onload = function() {
+                //context.drawImage(image, 0, 0, 1000, 680);
+                context.drawImage(heavyTank, 0, 0);
+                context.drawImage(heavyTank, 100, 100);
+            };*/
+            var heavyCTank = utils.preloadImage('heavy-ct.png');
+            var heavyCTankTurret = utils.preloadImage('heavy-ct-turret.png');
+            var rocket = utils.preloadImage('rocket.png');
+
+            var tank = {
+                body: heavyCTank,
+                turret: heavyCTankTurret,
+                weapon: rocket,
+                firing: [], // the rockets or bullets on firing
+                onFire: false, // It's firing
+                x: 300,
+                y: 300,
+                degreesPerTurn: 20,
+                turretDegreesPerTurn: 8, // if change degreePerTurn and turretDegreesPer, need to change turn function
+                config: {
+                    speed: 5
+                },
+                speed: 0, // this tank's speed
+                rocketSpeed: 20,
+                cooldown: 300, // in million second
+                firingPrepared: true, // if true, can fire, decided by cooldown time.
+                direction: 0, // 1-12 clock-wise
+                turretDirection: 0,
+                move: function(direction) { // forward or backward, need to specific by the direction. F/B
+                    var speed = this.speed;
+                    if (direction === 'B') { // Move backward, negative speed
+                        speed = -speed;
+                    }
+                    this.x += speed * Math.sin(this.direction * this.degreesPerTurn * Math.PI / 180);
+                    this.y -= speed * Math.cos(this.direction * this.degreesPerTurn * Math.PI / 180);
+
+                    // firing
+                    if (this.onFire) {
+                        for (var i = 0; i < this.firing.length; i++) {
+                            this.firing[i].x += this.rocketSpeed * Math.sin(this.firing[i].direction * this.turretDegreesPerTurn * Math.PI / 180);
+                            this.firing[i].y -= this.rocketSpeed * Math.cos(this.firing[i].direction * this.turretDegreesPerTurn * Math.PI / 180);
+                        }       
+                    }
+                },
+                turn: function(direction) { // turn left or turn right, 30 degrees per keydown. L/R
+                    switch(direction) {
+                        case 'L':
+                            this.direction--;
+                            this.turretDirection -= 2.5; // 2.5 cause 10/4 (degreesPerTurn/turretDegreesPerTurn
+                            break;
+                        case 'R':
+                            this.direction++;
+                            this.turretDirection += 2.5;
+                            break;
+                    }
+                },
+                turnTurret: function(direction) { // turn the turret
+                    switch(direction) {
+                        case 'L':
+                            this.turretDirection--;
+                            break;
+                        case 'R':
+                            this.turretDirection++;
+                            break;
+                    }
+                },
+                fire: function() {
+                    this.onFire = true;
+                    if (this.firingPrepared) { // can fire
+                        var rocketStartX = this.x + 25 * Math.sin(this.turretDirection * this.turretDegreesPerTurn * Math.PI / 180),
+                        rocketStartY = this.y - 25 * Math.cos(this.turretDirection * this.turretDegreesPerTurn * Math.PI / 180);
+                        this.firing.push({
+                            x: rocketStartX,
+                            y: rocketStartY,
+                            direction: this.turretDirection
+                        });
+                        this.firingPrepared = false;
+                        var thisTank = this;
+                        function preparingFire() {
+                            thisTank.firingPrepared = true;
+                        }
+                        window.setTimeout(preparingFire, thisTank.cooldown);
+                        console.log(this.firingPrepared);
+                    }
+                }
+            };
+
+            function drawTank(tank) {
+                var width = tank.body.width;
+                var height = tank.body.height;
+                var turretWidth = tank.turret.width;
+                var turretHeight = tank.turret.height;
+                var angleInRadians = tank.direction * tank.degreesPerTurn * Math.PI / 180;
+                var turretAngleInRadians = tank.turretDirection * tank.turretDegreesPerTurn * Math.PI / 180;
+
+                // rotate tank
+                context.translate(tank.x, tank.y);
+                context.rotate(angleInRadians);
+                //context.drawImage(tank.body, tank.x, tank.y);
+                context.drawImage(tank.body, -width / 2, - height / 2, width, height);
+                context.rotate(-angleInRadians);
+                context.translate(-tank.x, -tank.y);
+
+                // rotate turret
+                context.translate(tank.x, tank.y);
+                context.rotate(turretAngleInRadians);
+                context.drawImage(tank.turret, -turretWidth / 2 -1, -turretHeight / 2 -5, turretWidth, turretHeight); 
+                context.rotate(-turretAngleInRadians);
+                context.translate(-tank.x, -tank.y);
+
+                // fire, draw rocket
+                if (tank.onFire) {
+                    for (var i = 0; i < tank.firing.length; i++) {
+                        var rocketAngleInRadians = tank.firing[i].direction * tank.turretDegreesPerTurn * Math.PI / 180;
+                        var rocketWidth = tank.weapon.width,
+                        rocketHeight = tank.weapon.height;
+
+                        context.translate(tank.firing[i].x, tank.firing[i].y);
+                        context.rotate(rocketAngleInRadians);
+                        context.drawImage(tank.weapon, rocketWidth / 2 -5, rocketHeight / 2 -2, rocketWidth, rocketHeight);
+                        context.rotate(-rocketAngleInRadians);
+                        context.translate(-tank.firing[i].x, -tank.firing[i].y);
+                    }
+                }
+
+            }
+
+
+            // Initical the tank, add the eventListener to the window.
+            var init = function() {
+                /*function onControl(event) {
+                    switch (event.keyCode) {
+                        // forward 38
+                        case 38:
+                        event.preventDefault();
+                        tank.move('F');
+                        break;
+                        // backward 40
+                        case 40:
+                        event.preventDefault();
+                        tank.move('B');
+                        break;
+                        // turn left
+                        case 37:
+                        event.preventDefault();
+                        tank.turn('L');
+                        break;
+                        // turn right
+                        case 39:
+                        event.preventDefault();
+                        tank.turn('R');
+                        break;
+                    }
+                }*/
+                function onControlKeydown (event) {
+                    switch (event.keyCode) {
+                        // forward 38
+                        case 38:
+                            event.preventDefault();
+                            tank.speed = tank.config.speed;
+                            break;
+                        // backward 40
+                        case 40:
+                            event.preventDefault();
+                            tank.speed = -tank.config.speed;
+                            break;
+                        // turn left
+                        case 37:
+                            event.preventDefault();
+                            tank.turn('L');
+                            break;
+                        // turn right
+                        case 39:
+                            event.preventDefault();
+                            tank.turn('R');
+                            break;
+                        // fire
+                        case 32:
+                            event.preventDefault();
+                            tank.fire();
+                            break;
+                    }
+                }
+                function onControlKeyup (event) {
+                    switch (event.keyCode) {
+                        // forward 38
+                        case 38:
+                        event.preventDefault();
+                        tank.speed = 0;
+                        break;
+                        // backward 40
+                        case 40:
+                        event.preventDefault();
+                        tank.speed = 0;
+                        break;
+                        // turn left
+                        case 37:
+                        event.preventDefault();
+                        //tank.turn('L');
+                        break;
+                        // turn right
+                        case 39:
+                        event.preventDefault();
+                        //tank.turn('R');
+                        break;
+                    }
+                }
+
+                // control the turret by mouse
+                var lastX = 0;
+                function onControlMousemove (event) {
+                    if (event.pageX < lastX) { // move left
+                        tank.turretDirection--;
+                    } else {
+                        tank.turretDirection++;
+                    }
+                    lastX = event.pageX;
+                }
+
+                // left click for fire
+                function onClick(event) {
+                    tank.fire();
+                }
+                window.addEventListener('keydown', onControlKeydown, false);
+                window.addEventListener('keyup', onControlKeyup, false);
+                canvas.addEventListener('mousemove', onControlMousemove, false);
+                canvas.addEventListener('click', onClick, false);
+            }
+            init();
+           (function drawFrame() {
+                window.requestAnimationFrame(drawFrame, canvas);
+                context.clearRect(0, 0, canvas.width, canvas.height);
+                tank.move();
+                drawTank(tank);
+            }());
+        };
+    </script>
+        </div>
+</body>
+</html>
+
