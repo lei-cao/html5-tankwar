@@ -1,0 +1,30 @@
+Git basic commands:
+    git init
+    git add *
+    git commit -m 'comment'
+    git mv
+    git rm
+    .gitignore
+    git log -p --stat --pretty=oneline
+    git log --pretty="format:"%h - %an, %ar : %s"
+
+    Edit the last commit:
+    git commit --amend
+
+    Add tag:
+    git tag -a v0.1 -m
+
+Set up git
+    git config --global user.name "Lexo Charles"
+    git config --global user.email XXXXXXX
+
+    git init
+    touch README.md
+    git add README.md
+    git commit -m ''
+    git remote add origin git@github.com:sixpoint/html5-tankwar.git
+    git push -u origin master
+
+    FOR EXISTING Git Repo
+    git remote add origin git@githum.com:sixpoint/html5-tankwar.git
+    git push -u origin master

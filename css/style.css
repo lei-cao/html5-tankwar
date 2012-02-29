@@ -1,0 +1,21 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: #bbb;
+}
+
+#canvas {
+    background-color: #fff;
+    float: left;
+}
+
+#log {
+    width: 200px;
+    height: 100%;
+    float: right;
+    background: #00c3ff;
+    border: 1px solid yellow;
+}
