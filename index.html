@@ -76,8 +76,97 @@ hr { border: 0; width: 80%; border-bottom: 1px solid #aaa}
             </div>
 
             <canvas id="canvas" width="1000" height="680"></canvas>
-    <script src="https://raw.github.com/sixpoint/html5-tankwar/master/js/utils.js"></script>
+            <!--<script src="https://raw.github.com/sixpoint/html5-tankwar/master/js/utils.js"></script>-->
     <script>
+
+        var utils = {};
+
+        // requestAnimationFrame for every brownser
+        if (!window.requestAnimationFrame) {
+            window.requestAnimationFrame = (
+            window.requestAnimationFrame ||
+            window.mozRequestAnimationFrame ||
+            window.oRequestAnimationFrame ||
+            window.msRequestAnimationFrame ||
+            function (callback) {
+                return window.setTimeout(callback, 1000/60);
+            });
+        }
+
+        window.requestAnimationFrame = function (callback) {
+            return window.setTimeout(callback, 1000/60);
+        };
+
+        utils.captureMouse = function (element) {
+            var mouse = {x: 0, y: 0};
+
+            element.addEventListener('mousemove', function (event) {
+                var x, y;
+                if (event.pageX || event.pageY) {
+                    x = event.pageX;
+                    y = event.pageY;
+                    } else {
+                    x = event.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+                    y = event.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+                }
+
+                x -= element.offsetLeft;
+                y -= element.offsetTop;
+
+                mouse.x = x;
+                mouse.y = y;
+            }, false);
+
+            return mouse;
+        };
+
+        // colorToRGB utils.colorToRGB(0xFFFF00, 0.6) to rgba(255,255,0,0.5)
+        utils.colorToRGB = function (color, alpha) {
+            // if string format, convert to number
+            if (typeof color === 'string' && color[0] === '#') {
+                color = window.parseInt(color.slice(1), 16);
+            }
+            alpha = (alpha === undefined) ? 1 : alpha;
+            // extract component values
+            var r = color >> 16 & 0xff,
+            g = color >> 8 & 0xff,
+            b = color & oxff,
+            a = (alpha < 0) ? 0 : ((alpha >1) ? 1 : alpha);
+
+            // use 'rgba' if needed
+            if (a === 1) {
+                return "rgb("+ r + ","+ g+","+ b+")";
+                } else {
+                return "rgba("+ r +","+ g+","+ b +","+ a +")";
+            }
+        };
+
+        // parseColor utils.parseColor(0xFFFF00) to #ffff00
+        utils.parseColor = function (color, toNumber) {
+            if (toNumber === true) {
+                if (typeof color === 'number') {
+                    return (color | 0); // chop off decimal
+                }
+                if (typeof color === 'string' && color[0] === '#') {
+                    color = color.slice(1);
+                }
+
+                return window.parseInt(color, 16);
+                } else {
+                if (typeof color === 'number') {
+                    // make sure our hexadecimal number ispadded out
+                    color = '#' + ('00000' + (color | 0).toString(16)).substr(-6);
+                }
+                return color;
+            }
+        }
+
+        utils.preloadImage = function(imgUrl) {
+            var image = new Image();
+            image.src = 'https://github.com/sixpoint/html5-tankwar/raw/master/images/tank/images/entity/' + imgUrl;
+            return image;
+        }
+
         window.onload = function() {
             // the configurations
             var config = {
@@ -88,7 +177,7 @@ hr { border: 0; width: 80%; border-bottom: 1px solid #aaa}
             };
 
             var canvas = document.getElementById('canvas'),
-                context = canvas.getContext('2d');
+            context = canvas.getContext('2d');
             /*var heavyTank = new Image();
             heavyTank.src = "images/heavy-ct.png";
             heavyTank.onload = function() {
@@ -138,23 +227,23 @@ hr { border: 0; width: 80%; border-bottom: 1px solid #aaa}
                 turn: function(direction) { // turn left or turn right, 30 degrees per keydown. L/R
                     switch(direction) {
                         case 'L':
-                            this.direction--;
-                            this.turretDirection -= 2.5; // 2.5 cause 10/4 (degreesPerTurn/turretDegreesPerTurn
-                            break;
+                        this.direction--;
+                        this.turretDirection -= 2.5; // 2.5 cause 10/4 (degreesPerTurn/turretDegreesPerTurn
+                        break;
                         case 'R':
-                            this.direction++;
-                            this.turretDirection += 2.5;
-                            break;
+                        this.direction++;
+                        this.turretDirection += 2.5;
+                        break;
                     }
                 },
                 turnTurret: function(direction) { // turn the turret
                     switch(direction) {
                         case 'L':
-                            this.turretDirection--;
-                            break;
+                        this.turretDirection--;
+                        break;
                         case 'R':
-                            this.turretDirection++;
-                            break;
+                        this.turretDirection++;
+                        break;
                     }
                 },
                 fire: function() {
@@ -249,29 +338,29 @@ hr { border: 0; width: 80%; border-bottom: 1px solid #aaa}
                     switch (event.keyCode) {
                         // forward 38
                         case 38:
-                            event.preventDefault();
-                            tank.speed = tank.config.speed;
-                            break;
+                        event.preventDefault();
+                        tank.speed = tank.config.speed;
+                        break;
                         // backward 40
                         case 40:
-                            event.preventDefault();
-                            tank.speed = -tank.config.speed;
-                            break;
+                        event.preventDefault();
+                        tank.speed = -tank.config.speed;
+                        break;
                         // turn left
                         case 37:
-                            event.preventDefault();
-                            tank.turn('L');
-                            break;
+                        event.preventDefault();
+                        tank.turn('L');
+                        break;
                         // turn right
                         case 39:
-                            event.preventDefault();
-                            tank.turn('R');
-                            break;
+                        event.preventDefault();
+                        tank.turn('R');
+                        break;
                         // fire
                         case 32:
-                            event.preventDefault();
-                            tank.fire();
-                            break;
+                        event.preventDefault();
+                        tank.fire();
+                        break;
                     }
                 }
                 function onControlKeyup (event) {
@@ -304,7 +393,7 @@ hr { border: 0; width: 80%; border-bottom: 1px solid #aaa}
                 function onControlMousemove (event) {
                     if (event.pageX < lastX) { // move left
                         tank.turretDirection--;
-                    } else {
+                        } else {
                         tank.turretDirection++;
                     }
                     lastX = event.pageX;
@@ -320,7 +409,7 @@ hr { border: 0; width: 80%; border-bottom: 1px solid #aaa}
                 canvas.addEventListener('click', onClick, false);
             }
             init();
-           (function drawFrame() {
+            (function drawFrame() {
                 window.requestAnimationFrame(drawFrame, canvas);
                 context.clearRect(0, 0, canvas.width, canvas.height);
                 tank.move();
@@ -328,7 +417,7 @@ hr { border: 0; width: 80%; border-bottom: 1px solid #aaa}
             }());
         };
     </script>
-        </div>
+</div>
 </body>
 </html>
 
