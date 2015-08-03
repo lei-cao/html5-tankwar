@@ -17,3 +17,6 @@ Notification
 ------------
 
 The entity and ui images resources is downloaded from [boombat](http://code.google.com/p/boombat/)
+
+
+MADE some change
